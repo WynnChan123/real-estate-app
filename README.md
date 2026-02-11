@@ -48,3 +48,14 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+For development (to see changes of code involved with Google Cloud):
+```bash
+npx expo start --dev-client
+```
+
+To build a development client (.apk file):
+```bash
+npx eas-cli build --platform android --profile development
+```
