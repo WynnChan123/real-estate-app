@@ -10,7 +10,6 @@ import React from 'react';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const SignUp = () => {
@@ -57,10 +56,34 @@ const SignUp = () => {
   const [username, setUsername] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
+
+  const handleSignUp = async() => {
+    setError('');
+    if(password !== confirmPassword){
+        console.error('Passwords do not match');
+        setError('Passwords do not match');
+        return;
+    }
+
+    const response = await fetch('http://192.168.0.137:3000/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type' : 'application/json',
+      },
+      body: JSON.stringify({ username, email, password: confirmPassword }),
+    });
+    if(!response.ok) {
+      console.error('Sign-up failed');
+      return;
+    }
+    const data = await response.json();
+    console.log('Sign-up successful', data);
+  }
 
   return (
     <SafeAreaProvider>
@@ -160,7 +183,10 @@ const SignUp = () => {
                   />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.loginButton}>
+              {error ? (
+                <Text style={{ color: 'red' }}>{error}</Text>
+              ) : null}
+              <TouchableOpacity style={styles.loginButton} onPress={handleSignUp}>
                 <Text className="text-white font-bold">Sign Up</Text>
               </TouchableOpacity>
             </View>
@@ -189,10 +215,10 @@ const SignUp = () => {
                       color: 'lightblue',
                       textDecorationLine: 'underline',
                     }}
-                    onPress={() => router.push('/sign-up')}
+                    onPress={() => router.push('/sign-in')}
                   >
                     {' '}
-                    Sign Up
+                    Sign In
                   </Text>
                 </Text>
               </View>

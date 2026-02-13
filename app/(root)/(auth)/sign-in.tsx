@@ -10,6 +10,7 @@ import React from 'react';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const SignIn = () => {
   const styles = StyleSheet.create({
@@ -52,6 +53,32 @@ const SignIn = () => {
   const router = useRouter();
   const [password, setPassword] = React.useState('');
   const [email, setEmail] = React.useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
+  const [error, setError] = React.useState('');
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+
+  const handleSignIn = async() => {
+    const response = await fetch('http://192.168.0.137:3000/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!response.ok) {
+      console.error('Sign-in failed');
+      setError('Invalid email or password');
+      return;
+    }
+    const data = await response.json();
+    console.log('Sign-in successful', data);
+    router.push('/dashboard');
+  }
+    
+  
 
   return (
     <SafeAreaProvider>
@@ -109,9 +136,20 @@ const SignIn = () => {
                   value={password}
                   onChangeText={setPassword}
                   style={styles.TextInput}
+                  secureTextEntry={isPasswordVisible}
                 />
+              <TouchableOpacity onPress={togglePasswordVisibility}>
+                <MaterialCommunityIcons
+                  name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color="white"
+                />
+              </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.loginButton}>
+              {error ? (
+                <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>
+              ) : null}
+              <TouchableOpacity style={styles.loginButton} onPress={handleSignIn}>
                 <Text className="text-white font-bold">Log In</Text>
               </TouchableOpacity>
             </View>
