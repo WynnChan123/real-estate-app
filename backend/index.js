@@ -2,6 +2,7 @@ const express = require('express');
 const port = 3000;
 const { connectDB } = require('./connectdb');
 const authRoutes = require('./routes/auth.routes');
+require("dotenv").config();
 
 const app = express();
 app.use(express.json()); // parse JSON

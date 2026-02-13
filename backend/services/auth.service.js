@@ -3,6 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 const registerUser = async ({ username, email, password}) => {
     //Check if user already exists
     const existingUser = await User.findOne({ email }); 
@@ -11,6 +16,11 @@ const registerUser = async ({ username, email, password}) => {
     }else {
       //Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
+      isValidEmail(email);
+      if(!isValidEmail(email)){
+        return { error: 'Invalid email format' };
+      }
+
       const newUser = new User({ username, email, password: hashedPassword });
       await newUser.save();
       return { message: 'User registered successfully', userId: newUser._id };
