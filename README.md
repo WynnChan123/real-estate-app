@@ -59,3 +59,13 @@ To build a development client (.apk file):
 ```bash
 npx eas-cli build --platform android --profile development
 ```
+
+To start the virtual environment (ai directory):
+```bash
+venv\Scripts\Activate.ps1
+```
+
+To run the ai directory server:
+```bash
+fastapi dev main.py
+```
