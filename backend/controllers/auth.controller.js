@@ -3,6 +3,9 @@ const { loginUser, registerUser } = require('../services/auth.service');
 const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    if(!username || !email || !password){
+      return res.status(400).json({ error : 'Username, email and password required' });
+    }
     const result = await registerUser({ username, email, password });
     if (result.error) {
       return res.status(400).json(result);
@@ -16,6 +19,10 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    if(!email || !password){
+      return res.status(400).json({ error : 'Email and password required' });
+    }
+
     const result = await loginUser({ email, password });
     if(result.error){
       return res.status(400).json(result);
