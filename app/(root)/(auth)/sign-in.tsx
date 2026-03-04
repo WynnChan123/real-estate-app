@@ -11,6 +11,8 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const SignIn = () => {
   const styles = StyleSheet.create({
@@ -75,6 +77,8 @@ const SignIn = () => {
     }
     const data = await response.json();
     console.log('Sign-in successful', data);
+    await AsyncStorage.setItem('token', data.token);
+
     router.push('/dashboard');
   }
     
