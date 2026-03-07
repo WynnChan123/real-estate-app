@@ -1,10 +1,11 @@
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useAuth from '@/app/hooks/useAuth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface SessionProps {
   _id: string;
@@ -12,9 +13,24 @@ export interface SessionProps {
   created_at: Date;
 }
 
+const Item = ({ title }: { title: string }) => (
+  <View style={styles.item}>
+    <Text style={styles.itemText}>{title}</Text>
+  </View>
+);
+
 function CustomDrawerContent(){
   const router = useRouter();
   const { userId, username, email, loading } = useAuth();
+  const [sessions, setSessions] = useState<SessionProps[]>([]);
+
+  const renderItem = ({ item }: { item: SessionProps }) => (
+    <Pressable
+      onPress={() => router.push({ pathname: "/chat/[sessionId]", params: { sessionId: item._id} })}
+    >
+      <Item title={item.title} />
+    </Pressable>
+  );
 
   useEffect(() => {
     if(loading) {
@@ -27,32 +43,40 @@ function CustomDrawerContent(){
 
     const fetchSessions = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/session/getSessions/${userId}`, {
+        const token = await AsyncStorage.getItem('token');
+
+        const response = await fetch(`http://10.10.11.202:3000/session/getSessions/${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           }
         });
-        const data = await response.json();
-        console.log('Sessions:', data);
         if (!response.ok) {
           throw new Error("Failed to fetch sessions");
         }
+        const data = await response.json();
+        console.log('Sessions:', data);
+        setSessions(data.result.sessions);
       }catch (error) {
         console.error('Error fetching sessions:', error);
       }
     }
 
-
     fetchSessions();
-  }, [userId]);
+  }, [userId, loading]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#050D1A', padding: 16 }}>
       <Text style={styles.header}>My Chats</Text>
         <Text className="text-white">Username: {username}</Text>
-        <Text className="text-white">Email: {email}</Text>
-
+        <Text className="text-white">Logged in as: {email}</Text>
+        <FlatList
+          data={sessions}
+          keyExtractor={item => item._id} 
+          renderItem = {renderItem}
+          
+        />
     </View>
   );
 }
@@ -90,5 +114,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     marginBottom: 16,
+  },
+  item: {
+    backgroundColor: '#050D1A',
+    padding: 12,
+    borderRadius: 8,
+    paddingTop: 14,
+  },
+  itemText: {
+    color: 'white',
+    fontSize: 16,
   }
 })

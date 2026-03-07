@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 const SignIn = () => {
   const styles = StyleSheet.create({
     container: {
@@ -62,8 +61,8 @@ const SignIn = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
-  const handleSignIn = async() => {
-    const response = await fetch('http://192.168.0.137:3000/auth/login', {
+  const handleSignIn = async () => {
+    const response = await fetch('http://10.10.11.202:3000/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -80,9 +79,7 @@ const SignIn = () => {
     await AsyncStorage.setItem('token', data.token);
 
     router.push('/dashboard');
-  }
-    
-  
+  };
 
   return (
     <SafeAreaProvider>
@@ -142,18 +139,21 @@ const SignIn = () => {
                   style={styles.TextInput}
                   secureTextEntry={isPasswordVisible}
                 />
-              <TouchableOpacity onPress={togglePasswordVisibility}>
-                <MaterialCommunityIcons
-                  name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-                  size={20}
-                  color="white"
-                />
-              </TouchableOpacity>
+                <TouchableOpacity onPress={togglePasswordVisibility}>
+                  <MaterialCommunityIcons
+                    name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="white"
+                  />
+                </TouchableOpacity>
               </View>
               {error ? (
                 <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>
               ) : null}
-              <TouchableOpacity style={styles.loginButton} onPress={handleSignIn}>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleSignIn}
+              >
                 <Text className="text-white font-bold">Log In</Text>
               </TouchableOpacity>
             </View>
