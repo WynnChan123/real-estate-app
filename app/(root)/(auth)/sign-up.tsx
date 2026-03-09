@@ -70,7 +70,7 @@ const SignUp = () => {
         return;
     }
 
-    const response = await fetch('http://10.10.11.202:3000/auth/register', {
+    const response = await fetch('http://10.10.9.245:3000/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type' : 'application/json',

@@ -2,7 +2,7 @@ import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import useAuth from '@/app/hooks/useAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,11 +33,7 @@ function CustomDrawerContent(){
   );
 
   useEffect(() => {
-    if(loading) {
-      return;
-    }
-    if (!userId) {
-      console.error('User ID is missing. Cannot fetch sessions.');
+    if(loading || !userId) {
       return;
     }
 
@@ -45,7 +41,7 @@ function CustomDrawerContent(){
       try {
         const token = await AsyncStorage.getItem('token');
 
-        const response = await fetch(`http://10.10.11.202:3000/session/getSessions/${userId}`, {
+        const response = await fetch(`http://10.10.9.245:3000/session/getSessions/${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -104,6 +100,7 @@ export default function TabsLayout() {
         <Drawer.Screen name="explore" options={{ drawerItemStyle: { display: 'none' } }} />
         <Drawer.Screen name="index"   options={{ drawerItemStyle: { display: 'none' } }} />
         <Drawer.Screen name="profile" options={{ drawerItemStyle: { display: 'none' } }} />
+        <Drawer.Screen name="chat/[sessionId]" options={{ drawerItemStyle: { display: 'none' } }} />
       </Drawer>
     </GestureHandlerRootView>
   )
