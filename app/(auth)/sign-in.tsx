@@ -11,8 +11,9 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const SignUp = () => {
+const SignIn = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -53,37 +54,33 @@ const SignUp = () => {
   const router = useRouter();
   const [password, setPassword] = React.useState('');
   const [email, setEmail] = React.useState('');
-  const [username, setUsername] = React.useState('');
-  const [confirmPassword, setConfirmPassword] = React.useState('');
   const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
   const [error, setError] = React.useState('');
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
   const togglePasswordVisibility = () => {
     setIsPasswordVisible(!isPasswordVisible);
   };
 
-  const handleSignUp = async() => {
-    setError('');
-    if(password !== confirmPassword){
-        console.error('Passwords do not match');
-        setError('Passwords do not match');
-        return;
-    }
-
-    const response = await fetch('http://10.10.9.245:3000/auth/register', {
+  const handleSignIn = async () => {
+    const response = await fetch(`http://${apiUrl}/auth/login`, {
       method: 'POST',
       headers: {
-        'Content-Type' : 'application/json',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, email, password: confirmPassword }),
+      body: JSON.stringify({ email, password }),
     });
-    if(!response.ok) {
-      console.error('Sign-up failed');
+    if (!response.ok) {
+      console.error('Sign-in failed');
+      setError('Invalid email or password');
       return;
     }
     const data = await response.json();
-    console.log('Sign-up successful', data);
-  }
+    console.log('Sign-in successful', data);
+    await AsyncStorage.setItem('token', data.token);
+
+    router.push('/dashboard');
+  };
 
   return (
     <SafeAreaProvider>
@@ -114,25 +111,13 @@ const SignUp = () => {
               <Text className="text-white">Back</Text>
             </TouchableOpacity>
             <Text className="text-white font-extrabold text-4xl pl-5 pt-10">
-              Create an {'\n'}
-            </Text>
-            <Text className="text-orange-300 font-extrabold text-4xl pl-5">
-              Account
+              Welcome {'\n'}
+              Back!
             </Text>
             <View
               className="mt-20 flex items-center justify-items-center"
               style={{ alignSelf: 'center', width: '100%' }}
             >
-              <View style={styles.inputContainer}>
-                <Ionicons name="person" size={20} color="white" />
-                <TextInput
-                  placeholder="Username"
-                  placeholderTextColor="white"
-                  value={username}
-                  onChangeText={setUsername}
-                  style={styles.TextInput}
-                />
-              </View>
               <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={20} color="white" />
                 <TextInput
@@ -160,34 +145,17 @@ const SignUp = () => {
                     name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
                     color="white"
-                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                  />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={20} color="white" />
-                <TextInput
-                  placeholder="Confirm Password"
-                  placeholderTextColor="white"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  style={styles.TextInput}
-                  secureTextEntry={isPasswordVisible}
-                />
-                <TouchableOpacity onPress={togglePasswordVisibility}>
-                  <MaterialCommunityIcons
-                    name={isPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color="white"
-                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
                   />
                 </TouchableOpacity>
               </View>
               {error ? (
-                <Text style={{ color: 'red' }}>{error}</Text>
+                <Text style={{ color: 'red', marginTop: 10 }}>{error}</Text>
               ) : null}
-              <TouchableOpacity style={styles.loginButton} onPress={handleSignUp}>
-                <Text className="text-white font-bold">Sign Up</Text>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleSignIn}
+              >
+                <Text className="text-white font-bold">Log In</Text>
               </TouchableOpacity>
             </View>
             <View className="pt-5">
@@ -209,16 +177,16 @@ const SignUp = () => {
                 style={{ alignItems: 'center', marginLeft: 80 }}
               >
                 <Text className="text-white font-bold flex text-center mt-1">
-                  Already have an account?
+                  Don't have an account?
                   <Text
                     style={{
                       color: 'lightblue',
                       textDecorationLine: 'underline',
                     }}
-                    onPress={() => router.push('/sign-in')}
+                    onPress={() => router.push('/sign-up')}
                   >
                     {' '}
-                    Sign In
+                    SIGN UP NOW
                   </Text>
                 </Text>
               </View>
@@ -229,4 +197,4 @@ const SignUp = () => {
     </SafeAreaProvider>
   );
 };
-export default SignUp;
+export default SignIn;

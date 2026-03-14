@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -13,6 +13,7 @@ import { List } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
+import useAuth from '@/app/hooks/useAuth';
 
 export interface MessageProps {
   _id: string;
@@ -20,6 +21,7 @@ export interface MessageProps {
   role: string;
   created_at: Date;
 }
+
 const styles = StyleSheet.create({
   bubbleContainer: {
     marginVertical: 4,
@@ -101,13 +103,43 @@ const SessionId = () => {
   const navigation = useNavigation();
   const { sessionId } = useLocalSearchParams();
   const [messages, setMessages] = useState<MessageProps[]>([]);
+  const [messageContent, setMessageContent] = useState('');
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const userId = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
+  const handleSendMessage = async (messageContent: string) => {
+    try {
+        const token = await AsyncStorage.getItem('token');
+        if(token) {
+            const response = await fetch(`http://${apiUrl}/chat/createMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ sessionId, content: messageContent })
+            });
+
+            if (!response.ok) {
+               throw new Error('Failed to send message');
+            }
+          
+           const data = await response.json(); 
+           console.log('Message sent:', data);
+           
+          setMessageContent('');
+          fetchMessages();
+        }
+    }catch (error) {
+        console.error('Error sending message:', error);
+    }
+  }
     const fetchMessages = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
         const response = await fetch(
-          `http://10.10.9.245:3000/session/getSession/${sessionId}`,
+          `http://${apiUrl}/session/getSession/${sessionId}`,
           {
             method: 'GET',
             headers: {
@@ -129,6 +161,33 @@ const SessionId = () => {
       }
     };
 
+    const handleCreateChat = async() => {
+      try{
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch(`http://${apiUrl}/session/createSession`, {
+          method: 'POST',
+          headers: {
+            'Content-Type' : 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ userId })
+        });
+
+        if(!response.ok){
+          throw new Error('Failed to create chat');
+        }
+
+        const data = await response.json();
+        console.log('Chat created:', data);
+        console.log('Session ID created:', data.result.newSession._id);
+        //route to the created chat
+        router.push({ pathname: "/chat/[sessionId]", params: { sessionId: data.result.newSession._id} });
+      }catch(error){
+        console.error('Error creating chat:', error);
+      }
+    }
+
+  useEffect(() => {
     fetchMessages();
   }, [sessionId]);
 
@@ -161,7 +220,7 @@ const SessionId = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.createbutton}
-          onPress={() => console.log('creating chat...')}
+          onPress={() => handleCreateChat()}
         >
           <Text className="text-white font-bold">+ New Chat</Text>
         </TouchableOpacity>
@@ -177,8 +236,10 @@ const SessionId = () => {
           style={styles.inputfield}
           placeholder="Where do you want to stay?"
           placeholderTextColor="#94A3B8"
+          value={messageContent}
+          onChangeText={setMessageContent}
         />
-        <TouchableOpacity style={styles.sendButton}>
+        <TouchableOpacity style={styles.sendButton} onPress={() => handleSendMessage(messageContent)}>
           <Ionicons name="send" size={24} color="white" />
         </TouchableOpacity>
       </View>

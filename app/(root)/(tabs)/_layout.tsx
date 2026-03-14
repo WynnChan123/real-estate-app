@@ -1,12 +1,10 @@
-import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { Drawer } from 'expo-router/drawer';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Pressable } from 'react-native';
-import { Redirect, useRouter } from 'expo-router';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import useAuth from '@/app/hooks/useAuth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 export interface SessionProps {
   _id: string;
   title: string;
@@ -21,8 +19,9 @@ const Item = ({ title }: { title: string }) => (
 
 function CustomDrawerContent(){
   const router = useRouter();
-  const { userId, username, email, loading } = useAuth();
   const [sessions, setSessions] = useState<SessionProps[]>([]);
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const { username, email, loading } = useAuth(); 
 
   const renderItem = ({ item }: { item: SessionProps }) => (
     <Pressable
@@ -32,35 +31,53 @@ function CustomDrawerContent(){
     </Pressable>
   );
 
-  useEffect(() => {
-    if(loading || !userId) {
-      return;
-    }
-
     const fetchSessions = async () => {
+    
       try {
         const token = await AsyncStorage.getItem('token');
+        console.log('Token:', token);
 
-        const response = await fetch(`http://10.10.9.245:3000/session/getSessions/${userId}`, {
+        if (!token) return;
+
+        const response = await fetch(`http://${apiUrl}/session/getSessions`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           }
         });
+
+        console.log('Status:', response.status);
+        const data = await response.json();
+        console.log('Response:', JSON.stringify(data, null, 2));
+
         if (!response.ok) {
           throw new Error("Failed to fetch sessions");
         }
-        const data = await response.json();
+        // const data = await response.json();
         console.log('Sessions:', data);
-        setSessions(data.result.sessions);
+        const sessions = data.result.sessions;
+        const sortedSessions = sessions.sort((a: SessionProps, b: SessionProps)=> { 
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()});
+        setSessions(sortedSessions);
       }catch (error) {
         console.error('Error fetching sessions:', error);
       }
+    };
+
+    const handleLogout = async () => {
+      await AsyncStorage.removeItem('token');
+      router.replace('/(auth)/sign-in');
+    }
+
+  useEffect(() => {
+    if(loading){
+      return;
     }
 
     fetchSessions();
-  }, [userId, loading]);
+  }, [loading]);
+
 
   return (
     <View style={{ flex: 1, backgroundColor: '#050D1A', padding: 16 }}>
@@ -71,8 +88,13 @@ function CustomDrawerContent(){
           data={sessions}
           keyExtractor={item => item._id} 
           renderItem = {renderItem}
+          style = {{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 16 }}
           
         />
+      <Pressable onPress={handleLogout} style={styles.logoutButton}>
+        <Text style={styles.logoutText}>Log Out</Text>
+      </Pressable>
     </View>
   );
 }
@@ -121,5 +143,16 @@ const styles = StyleSheet.create({
   itemText: {
     color: 'white',
     fontSize: 16,
-  }
+  },
+  logoutButton: {
+    backgroundColor: '#F97316',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 })

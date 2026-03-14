@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
 });
 
 export default function Index() {
-  const welcomeImage = require('../../../assets/images/welcome.jpg');
+  const welcomeImage = require('../assets/images/welcome.jpg');
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const line = StyleSheet.create({
@@ -47,6 +47,7 @@ export default function Index() {
       offlineAccess: true,
     });
   }, []);
+
 
     useEffect(() => {
       Animated.timing(fadeAnim, {

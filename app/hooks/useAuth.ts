@@ -6,6 +6,7 @@ type JwtPayload = {
   userId: string;
   username: string;
   email: string;
+  exp: number;
 }
 
 const useAuth = () => {
@@ -22,6 +23,11 @@ const useAuth = () => {
           return;
         }
         const decoded = jwtDecode<JwtPayload>(token);
+
+        if(decoded.exp && decoded.exp * 1000 < Date.now()){
+          await AsyncStorage.removeItem('token');
+          return;
+        }
         setUserId(decoded.userId);
         setUsername(decoded.username);
         setEmail(decoded.email);
