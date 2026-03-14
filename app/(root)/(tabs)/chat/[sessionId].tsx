@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import useAuth from '@/app/hooks/useAuth';
+import SessionContext from '@/app/context/SessionContext';
 
 export interface MessageProps {
   _id: string;
@@ -107,6 +108,7 @@ const SessionId = () => {
   const apiUrl = process.env.EXPO_PUBLIC_API_URL;
   const userId = useAuth();
   const router = useRouter();
+  const { fetchSessions } = useContext(SessionContext);
 
   const handleSendMessage = async (messageContent: string) => {
     try {
@@ -190,7 +192,12 @@ const SessionId = () => {
   useEffect(() => {
     fetchMessages();
   }, [sessionId]);
-
+  
+  useFocusEffect(
+    useCallback(() => {
+      fetchSessions();
+    }, [])
+  );
   const messageBubble = ({ message }: { message: MessageProps }) => {
     const isUser = message.role === 'user';
 

@@ -9,11 +9,42 @@ import {
 } from 'react-native';
 import { List } from 'react-native-paper';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import useAuth from '@/app/hooks/useAuth';
 
 
 
 const dashboard = () => {
   const navigation = useNavigation();
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  const userId = useAuth();
+
+  const handleCreateChat = async() => {
+  try{
+    const token = await AsyncStorage.getItem('token');
+    const response = await fetch(`http://${apiUrl}/session/createSession`, {
+      method: 'POST',
+      headers: {
+        'Content-Type' : 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ userId })
+    });
+
+    if(!response.ok){
+      throw new Error('Failed to create chat');
+    }
+
+    const data = await response.json();
+    console.log('Chat created:', data);
+    console.log('Session ID created:', data.result.newSession._id);
+    //route to the created chat
+    router.push({ pathname: "/chat/[sessionId]", params: { sessionId: data.result.newSession._id} });
+  }catch(error){
+    console.error('Error creating chat:', error);
+  }
+}
 
   const styles = StyleSheet.create({
     topBar: {
@@ -78,7 +109,7 @@ const dashboard = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.createbutton}
-              onPress={() => console.log('creating chat...')}
+              onPress={() => handleCreateChat() }
             >
               <Text className="text-white font-bold">+ New Chat</Text>
             </TouchableOpacity>

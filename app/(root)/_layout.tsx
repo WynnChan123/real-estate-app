@@ -1,6 +1,7 @@
 //(root)/_layout.tsx
 import { Redirect, Stack } from 'expo-router';
 import useAuth from '../hooks/useAuth';
+import { SessionProvider } from '@/app/context/SessionContext';
 
 export default function RootGroupLayout() {
   const { userId, loading } = useAuth();
@@ -10,7 +11,8 @@ export default function RootGroupLayout() {
   if (loading) return null;
   if (!userId) return <Redirect href="/(auth)/sign-in" />;
   return (
-    
-    <Stack screenOptions={{ headerShown: false }} />
+    <SessionProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SessionProvider>
   );
 }
